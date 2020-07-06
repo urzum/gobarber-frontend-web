@@ -1,9 +1,8 @@
 import React, { useCallback, useRef } from 'react';
-import { FiLogIn, FiMail, FiLock } from 'react-icons/fi';
-import { FormHandles } from '@unform/core';
-import { Form } from '@unform/web';
-import * as Yup from 'yup';
-
+import { FiArrowLeft, FiMail, FiUser, FiLock } from 'react-icons/fi'; // utilizado para icones
+import { FormHandles } from '@unform/core'; // traz todas as tipagens para formulários
+import { Form } from '@unform/web'; // biblioteca para utilização de formulatorios
+import * as Yup from 'yup'; // validador de formulários
 import getValidationErrors from '../../utils/getValidationErrors';
 
 import logoImg from '../../assets/logo.svg';
@@ -13,7 +12,7 @@ import Button from '../../components/button';
 
 import { Container, Content, Background } from './styles';
 
-const Signin: React.FC = () => {
+const Signup: React.FC = () => {
   // useRef consegue setar informações de formularios de forma dinamica vendo cada componente
   const formRef = useRef<FormHandles>(null);
 
@@ -23,10 +22,11 @@ const Signin: React.FC = () => {
       formRef.current?.setErrors({});
 
       const schema = Yup.object().shape({
+        name: Yup.string().required('Nome é obrigatório'),
         email: Yup.string()
           .required('E-mail obrgatório')
           .email('Digite um e-mail valido'),
-        password: Yup.string().required('Senha obrgatória'),
+        password: Yup.string().min(6, 'No minímo 6 digitos'),
       });
 
       // valida e retorna todos os erros de uma vez com o abortEarly igual a False
@@ -40,11 +40,13 @@ const Signin: React.FC = () => {
 
   return (
     <Container>
+      <Background />
       <Content>
         <img src={logoImg} alt="GoBarber" />
 
         <Form ref={formRef} onSubmit={handleSubmit}>
-          <h1>Faça seu logon</h1>
+          <h1>Faça seu cadastro</h1>
+          <Input name="name" icon={FiUser} placeholder="Nome" />
           <Input name="email" icon={FiMail} placeholder="E-mail" />
           <Input
             name="password"
@@ -53,19 +55,16 @@ const Signin: React.FC = () => {
             placeholder="Password"
           />
 
-          <Button type="submit">Entrar</Button>
-          <a href="forgot">Esqueci minha senha</a>
+          <Button type="submit">Cadastrar</Button>
         </Form>
 
         <a href="login">
-          <FiLogIn />
-          Criar Conta
+          <FiArrowLeft />
+          Voltar para logon
         </a>
       </Content>
-
-      <Background />
     </Container>
   );
 };
 
-export default Signin;
+export default Signup;
