@@ -3,7 +3,10 @@ import { FiLogIn, FiMail, FiLock } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import { Form } from '@unform/web';
 import * as Yup from 'yup';
+import { Link, useHistory } from 'react-router-dom';
 
+import { useAuth } from '../../hooks/auth';
+import { useToast } from '../../hooks/toast';
 import getValidationErrors from '../../utils/getValidationErrors';
 
 import logoImg from '../../assets/logo.svg';
@@ -11,56 +14,87 @@ import logoImg from '../../assets/logo.svg';
 import Input from '../../components/input';
 import Button from '../../components/button';
 
-import { Container, Content, Background } from './styles';
+// eslint-disable-next-line import/no-unresolved
+import { Container, Content, AnimationContainer, Background } from './styles';
 
-const Signin: React.FC = () => {
+interface SignInFormData {
+  email: string;
+  password: string;
+}
+
+const SignIn: React.FC = () => {
   // useRef consegue setar informações de formularios de forma dinamica vendo cada componente
   const formRef = useRef<FormHandles>(null);
+  const history = useHistory();
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  const handleSubmit = useCallback(async (data: object) => {
-    try {
-      formRef.current?.setErrors({});
+  const { signIn } = useAuth();
+  const { addToast } = useToast();
 
-      const schema = Yup.object().shape({
-        email: Yup.string()
-          .required('E-mail obrgatório')
-          .email('Digite um e-mail valido'),
-        password: Yup.string().required('Senha obrgatória'),
-      });
+  const handleSubmit = useCallback(
+    async (data: SignInFormData) => {
+      try {
+        formRef.current?.setErrors({});
 
-      // valida e retorna todos os erros de uma vez com o abortEarly igual a False
-      await schema.validate(data, { abortEarly: false });
-    } catch (err) {
-      const errors = getValidationErrors(err);
+        const schema = Yup.object().shape({
+          email: Yup.string()
+            .required('E-mail obrgatório')
+            .email('Digite um e-mail valido'),
+          password: Yup.string().required('Senha obrgatória'),
+        });
 
-      formRef.current?.setErrors(errors);
-    }
-  }, []);
+        // valida e retorna todos os erros de uma vez com o abortEarly igual a False
+        await schema.validate(data, { abortEarly: false });
+
+        await signIn({
+          email: data.email,
+          password: data.password,
+        });
+
+        history.push('/dasboard');
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
+
+          formRef.current?.setErrors(errors);
+
+          return;
+        }
+
+        addToast({
+          type: 'error',
+          title: 'Erro no autentificação',
+          description: 'Ocorreu um erro ao fazer login, cheque as credenciais',
+        });
+      }
+    },
+    [signIn, addToast, history],
+  );
 
   return (
     <Container>
       <Content>
-        <img src={logoImg} alt="GoBarber" />
+        <AnimationContainer>
+          <img src={logoImg} alt="GoBarber" />
 
-        <Form ref={formRef} onSubmit={handleSubmit}>
-          <h1>Faça seu logon</h1>
-          <Input name="email" icon={FiMail} placeholder="E-mail" />
-          <Input
-            name="password"
-            icon={FiLock}
-            type="password"
-            placeholder="Password"
-          />
+          <Form ref={formRef} onSubmit={handleSubmit}>
+            <h1>Faça seu logon</h1>
+            <Input name="email" icon={FiMail} placeholder="E-mail" />
+            <Input
+              name="password"
+              icon={FiLock}
+              type="password"
+              placeholder="Password"
+            />
 
-          <Button type="submit">Entrar</Button>
-          <a href="forgot">Esqueci minha senha</a>
-        </Form>
+            <Button type="submit">Entrar</Button>
+            <a href="forgot">Esqueci minha senha</a>
+          </Form>
 
-        <a href="login">
-          <FiLogIn />
-          Criar Conta
-        </a>
+          <Link to="/signup">
+            <FiLogIn />
+            Criar Conta
+          </Link>
+        </AnimationContainer>
       </Content>
 
       <Background />
@@ -68,4 +102,4 @@ const Signin: React.FC = () => {
   );
 };
 
-export default Signin;
+export default SignIn;
